@@ -13,7 +13,7 @@ def validate_longitude_degrees(lon):
         float(num)
     except:
         raise ValueError('Argument should be numerical')
-    if not (lat >= -1800 and lat <= 1800):
+    if not (lat >= -180 and lat <= 180):
         raise ValueError('Longitude must be in degrees')
 
 
