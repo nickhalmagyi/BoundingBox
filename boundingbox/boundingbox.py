@@ -98,6 +98,8 @@ class BoundingBox:
         else
             bbox_front[EAST] = np.pi / 2
             bbox_front[WEST] = -np.pi / 2
+            bbox_reverse[EAST] = -np.pi / 2
+            bbox_reverse[WEST] = np.pi / 2
 
             if (source_radians[0] + max_latitude_diff > np.pi / 2 and \
                 source_radians[0] - max_latitude_diff < -np.pi / 2):
@@ -107,41 +109,46 @@ class BoundingBox:
             elif source_radians[0] + max_latitude_diff > np.pi / 2:
                 bbox_front[NORTH] = np.pi / 2
                 bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
-            
+                bbox_reverse[NORTH] = np.pi / 2
+                bbox_reverse[SOUTH] = np.arcsin( np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
+
+
             elif source_radians[0] - max_latitude_diff < -np.pi / 2:
                 bbox_front[NORTH] = source_radians[0] + max_latitude_diff
                 bbox_front[SOUTH] = -np.pi / 2
-                
+                bbox_reverse[NORTH] = np.arcsin( np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
+                bbox_reverse[SOUTH] = -np.pi / 2
+
 
         # bounding lat-lon of the box in degrees
         bbox_front = {k: degrees(v) for k, v in bbox_front.items()}
         bbox_reverse = {k: degrees(v) for k, v in bbox_reverse.items()}
         
-        return {k: degrees(v) for k, v in bbox.items()}
+        return bbox_front, bbox_reverse
 
 
-    def target_in_bounding_box(self, target):
+    def target_in_bounding_box(self, bbox, target):
         """
         :param bbox: dict with keys = [north, south, east, west]
         :param target_degrees: tuple (lat, lon) in degrees
         :return: boolean for source living within the bounding box
         """
-        lat = (target[0] >= self.bbox[SOUTH]) and (target[0] <= self.bbox[NORTH])
-        if self.bbox[WEST] <= self.bbox[EAST]:
-            lon = (target[1] >= self.bbox[WEST]) and (target[1] <= self.bbox[EAST])
+        lat = (target[0] >= bbox[SOUTH]) and (target[0] <= bbox[NORTH])
+        if bbox[WEST] <= bbox[EAST]:
+            lon = (target[1] >= bbox[WEST]) and (target[1] <= bbox[EAST])
         else:
-            lon = (target[1] >= self.bbox[EAST]) or (target[1] <= self.bbox[WEST])
+            lon = (target[1] >= bbox[EAST]) or (target[1] <= bbox[WEST])
 
         return lat and lon
 
 
-    def filter_targets_in_bounding_box(self, targets):
+    def filter_targets_in_bounding_box(self, bbox, targets):
         """
         :param targets: An iterable of lat-lon pairs. 
         Each pair must be itself an iterable just containing the numerical values
         :return: An iterable of booleans corresponding to whether or not the lat-lon pairs lie within the bounding box.
         """
-        targets_filtered = [target for target in targets if self.target_in_bounding_box(target)]
+        targets_filtered = [target for target in targets if self.target_in_bounding_box(bbox, target)]
         return targets_filtered
 
 
@@ -152,7 +159,7 @@ class BoundingBox:
         return targets_dist_sorted
 
 
-    def get_points_within_bbox(self, targets):
-        targets_filtered = self.filter_targets_in_bounding_box(targets)
+    def get_points_within_bbox(self, bbox, targets):
+        targets_filtered = self.filter_targets_in_bounding_box(bbox, targets)
         targets_dist = self.compute_distances_from_source(targets_filtered)
         return targets_dist
