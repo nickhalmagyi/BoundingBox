@@ -37,16 +37,6 @@ def make_bounding_box_length(source, lat_lons, N=1):
     return bbox_length
 
 
-def compute_max_longitude(source, length, units=KM):
-    d = length/EARTH_RADIUS[units]
-    if np.sin(source[0])**2 > np.cos(d)**2:
-        delta_lon = np.pi/2
-    else:
-        arg = np.cos(source[0])**(-1) * (np.cos(d)**2 - np.sin(source[0])**2)**(1/2)
-        delta_lon = np.arccos(arg)
-    return source[1] + delta_lon
-
-
 def get_all_points_within_distance(source, targets, length):
     """
     It is possible for a point to be within the bbox but further than length from source.

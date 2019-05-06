@@ -21,7 +21,7 @@ from boundingbox.validations.coordinates import validate_latlons_degrees, valida
 import boundingbox.coordinates; reload(boundingbox.coordinates)
 from boundingbox.coordinates import convert_latlon_degrees_to_radians, mod_longitude_radians
 
-from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
+from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES, FRONT, REVERSE
 
 class BoundingBox:
     def __init__(self, source, length, units=KM):
@@ -59,31 +59,64 @@ class BoundingBox:
     def units(self, units):
         validate_units(units)
         self.__units = units
+    
+    
+    def make_max_latitude_diff(self, length):
+        return length / self.earth_radius
+
+
+    def make_max_longitude_diff(self, source_radians, length):
+        """
+        :param source: lat-lon pair in radians
+        :param length: 
+        :return: 
+        """
+        d = length / self.earth_radius
+        max_longitude_arg = np.cos(source_radians[0]) ** (-1) * \
+                            (np.cos(d) ** 2 - np.sin(source_radians[0]) ** 2) ** (1 / 2)
+        return np.abs(np.arccos(max_longitude_arg))
 
 
     def make_bounding_box(self, source_radians, length):
         """
         :return: dict with keys = [north, south, east, west] in degrees
         """
-
-        # lon_diff, lat_diff are half of the length of a side of the bounding box,
-        # in latitude and longitude (radians)
-        # These formulae arises from simplifying the Haversine formula when two lats or two lons are equal
-
-        lon_arg = np.sin(length / (2 * EARTH_RADIUS_KM)) * (np.cos(source_radians[0])) ** (-1)
-        lon_arg_cutoff = min(1, lon_arg)
-        lon_diff = 2 * np.abs(np.arcsin(lon_arg_cutoff))
-
-        lat_diff = length / EARTH_RADIUS_KM
-
-        # bounding lat-lon of the box in radians
         bbox = {}
-        bbox[NORTH] = min(np.pi/2, self.source_radians[0] + lat_diff)
-        bbox[SOUTH] = max(-np.pi/2, self.source_radians[0] - lat_diff)
-        bbox[EAST] = mod_longitude_radians(source_radians[1] + lon_diff)
-        bbox[WEST] = mod_longitude_radians(source_radians[1] - lon_diff)
+        bbox_front = {}
+        bbox_reverse = {}
+
+        max_latitude_diff = make_max_latitude_diff(length)
+        max_longitude_diff = make_max_longitude_diff(source_radians, length)
+
+        if np.abs(source_radians[0]) + max_latitude_diff <= np.pi / 2:
+            max_longitude_diff = make_max_longitude_diff(source_radians, length)
+            bbox_front[NORTH] = source_radians[0] + max_latitude_diff
+            bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
+            bbox_front[EAST] = mod_longitude_radians(source_radians[1] + max_longitude_diff)
+            bbox_front[WEST] = mod_longitude_radians(source_radians[1] - max_longitude_diff)
+            
+        else
+            bbox_front[EAST] = np.pi / 2
+            bbox_front[WEST] = -np.pi / 2
+
+            if (source_radians[0] + max_latitude_diff > np.pi / 2 and \
+                source_radians[0] - max_latitude_diff < -np.pi / 2):
+                bbox_front[NORTH] = np.pi / 2
+                bbox_front[SOUTH] = -np.pi / 2
+        
+            elif source_radians[0] + max_latitude_diff > np.pi / 2:
+                bbox_front[NORTH] = np.pi / 2
+                bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
+            
+            elif source_radians[0] - max_latitude_diff < -np.pi / 2:
+                bbox_front[NORTH] = source_radians[0] + max_latitude_diff
+                bbox_front[SOUTH] = -np.pi / 2
+                
 
         # bounding lat-lon of the box in degrees
+        bbox_front = {k: degrees(v) for k, v in bbox_front.items()}
+        bbox_reverse = {k: degrees(v) for k, v in bbox_reverse.items()}
+        
         return {k: degrees(v) for k, v in bbox.items()}
 
 

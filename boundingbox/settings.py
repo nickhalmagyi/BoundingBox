@@ -10,3 +10,5 @@ SOUTH = 'south'
 EAST = 'east'
 WEST = 'west'
 
+FRONT = 'front'
+REVERSE = 'reverse'

@@ -1,0 +1,162 @@
+
+\documentclass[preprint,12pt]{article}
+
+\usepackage{amsmath,amssymb,array, amscd, comment, color, datetime}
+
+%\usepackage{color}
+%\usepackage[
+%      colorlinks=true,
+%%      linkcolor=darkblue,  
+%      urlcolor=blue,    
+%      filecolor=blue,     
+%      citecolor=red,
+%      pdfstartview=FitV,
+%       bookmarksopen=true    
+%      ]{hyperref}
+%\usepackage[left=2.5cm,top=2.5cm,right=2.5cm,nohead]{geometry}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{/Users/Halmagyi/Dropbox/macro}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{center}
+\fbox{DRAFT: \today,\ \currenttime}
+\end{center}
+
+\vspace{0.5cm}
+\begin{center}
+\baselineskip=13pt {\LARGE \bf{Notes on Bounding Box Construction \\
+for Filtering Geographic Data}\\}
+ \vskip1.5cm 
+Nick Halmagyi\ 
+ \vskip0.5cm
+\textit{Laboratoire de Physique Th\'eorique et Hautes Energies,\\
+Universit\'e Pierre et Marie Curie, CNRS UMR 7589, \\
+F-75252 Paris Cedex 05, France}\\
+\vskip0.5cm
+halmagyi@lpthe.jussieu.fr \\
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A common problem is data-science is the following: given a single geographic location $S$ (the  source) and a set of geographic locations $\widehat{T}$ (the targets), determine the closest $N$ locations $t_i \in \widehat{T}$  to $S$. One can achieve this by computing the distance from every target to the source $d(t_i, S)$ but this is prohibitively slow for moderately large set of targets.
+
+A better solution is to make a bounding region $\cB$ around $S$ and compute the distance from each $d(t_i,S)$ for each $t_i \in \cB$. For well constructed $\cB$ one can hope to find the $N$ closest points within $\cB$.
+
+
+Geographic locations are typically given in the longitude-latitude coordinate system
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Haversine Formula}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ The Haversine formula gives the distance between two points on the sphere in the latitude-longitude coordinate system: 
+ \be
+ \sin^2\Blp \frac{d}{2R}\Brp= \sin^2\Blp \frac{\vphi_1-\vphi_2}{2} \Brp+ \cos \vphi_1\cos \vphi_2 \sin^2\Blp \frac{\lam_1-\lam_2}{2}\Brp
+ \ee
+ or more conveniently
+ \bea
+\cos \frac{d}{R} &=& \sin \vphi_1 \sin \vphi_2 + \cos (\lam_2 - \lam_1)   \cos \vphi_1 \cos \vphi_2\,.
+ \eea
+where $R$ is the radius of the sphere.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Equal Latitude}
+When two latitudes are equal 
+\be
+\vphi_1=\vphi_2 = \vphi
+\ee
+we have
+\bea
+d &=&  2R \sin^{-1} \Big| \cos \vphi   \sin \Blp \frac{\lam_1-\lam_2}{2}\Brp \Big|  \\
+\Ra \quad |\lam_1 - \lam_2| &=& 2\left|\sin^{-1}\left[ \frac{\sin\left(\frac{d}{2R}\right)}{\cos(\varphi)}\right]\right|\,.
+\eea
+The maximum longitudinal difference between two points is 
+\be
+|\lam_2-\lam_1|_{\rm max} = \pi
+\ee
+which occurs when
+\be
+\sin\left(\frac{d}{2R}\right)  = \cos(\varphi)\,.
+\ee
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Equal Longitudes}
+ When two longitudes are equal 
+ \be
+ \lam_2=\lam_1
+ \ee
+the Haversine formula gives
+\be
+\varphi_2-\varphi_1 = \frac{d}{R}
+\ee 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Maximum longitude}
+Given a section of equal distance $d$ from the source $\varphi_1, \lam_1$ we want to know the maximum of $|\lam_2-\lam_1|$.
+
+Lets first look at an ellipse
+\be
+a^2 x^2 + b^2 y^2 = 1
+\ee
+solve for $x$
+\bea
+x(y) &= & \frac{1}{a}\sqrt{(1- b^2 y^2 )} \,, \qquad x'(y) = \frac{1}{a}\frac{2b^2y}{(1- b^2 y^2 )}
+\eea 
+so the extremum are at $y=0$.
+
+So we fix $(\varphi_1, \lam_1)$ and find the extremum of $\lam_2$. We change coordinates to
+\be
+\Lam= \cos\blp\lam_1-\lam_2(\vphi_2)\brp\,,\qquad \Psi = \sin \vphi_2
+\ee
+and find that the equations to be solved are
+\bea
+\csc \vphi_1\cos \frac{d}{R}&=&\cot \vphi_1 \Lam \sqrt{1-\Psi^2}  +\Psi \\
+\cot \vphi_1\Lam \Psi &=& \sqrt{1-\Psi^2}
+\eea
+
+The solution is 
+\bea
+\Lam &=& \sec(\vphi_1 ) \sqrt{\cos^2 \blp\frac{d}{R}\brp - \sin^2 (\vphi_1)} \\
+\Psi &=&\sec \blp\frac{d}{R}\brp  \sin \vphi_1
+\eea
+
+There is a branch point at one of the following points:
+\be
+{\rm b.p.} \quad \vphi_1 \pm \frac{d}{R} = \pm \pi/2
+\ee
+which is where the bounding section touching the north(south) pole. At this point the maximum longitude reached is $\lam_2-\lam_1 = \pi/2$ which is half way around the glode (though not necessarily at the equator)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Intersection with $\lam_2-\lam_1 = \frac{\pi}{2}$}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We want to know, when 
+\be
+\varphi_2-\varphi_1 > \frac{d}{R}
+\ee
+so that the bounding circle does not reach the pole. Can the bounding circle extend more than  $\pi/2$ in longitude.
+When $\lam_2-\lam_1 = \pi/2$ we have
+ \bea
+\cos \frac{d}{R} &=& \sin \vphi_1 \sin \vphi_2 
+ \eea
+ which will give a solution when
+ \be
+ \cos \frac{d}{R}< \sin\vphi_1
+ \ee
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{/Users/Halmagyi/Dropbox/utphys} 
+\bibliography{/Users/Halmagyi/Dropbox/myrefs}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
