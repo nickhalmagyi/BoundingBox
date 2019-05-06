@@ -2,7 +2,7 @@ from boundingbox.settings import KM, MILES
 
 def validate_latitude_degrees(lat):
     try:
-        float(num)
+        float(lat)
     except:
         raise ValueError('Argument should be numerical')
     if not (lat >= -90 and lat <= 90):
@@ -10,10 +10,10 @@ def validate_latitude_degrees(lat):
 
 def validate_longitude_degrees(lon):
     try:
-        float(num)
+        float(lon)
     except:
         raise ValueError('Argument should be numerical')
-    if not (lat >= -180 and lat <= 180):
+    if not (lon >= -180 and lon <= 180):
         raise ValueError('Longitude must be in degrees')
 
 

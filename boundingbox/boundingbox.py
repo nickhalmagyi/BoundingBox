@@ -15,7 +15,7 @@ from importlib import reload
 
 import boundingbox.validations; reload(boundingbox.validations)
 from boundingbox.validations.numbers import validate_positive_number
-from boundingbox.validations.coordinates import validate_latlons_degrees, validate_units
+from boundingbox.validations.coordinates import validate_latlon_degrees, validate_latlons_degrees, validate_units
 
 
 import boundingbox.coordinates; reload(boundingbox.coordinates)
@@ -28,9 +28,9 @@ class BoundingBox:
         self.source_degrees = source
         self.length = length
         self.units = units
+        self.earth_radius = EARTH_RADIUS[units]
         self.source_radians = convert_latlon_degrees_to_radians(self.source_degrees)
         self.bbox = self.make_bounding_box(self.source_radians, self.length)
-        self.earth_radius = EARTH_RADIUS[units]
 
 
     @property
@@ -81,21 +81,19 @@ class BoundingBox:
         """
         :return: dict with keys = [north, south, east, west] in degrees
         """
-        bbox = {}
         bbox_front = {}
         bbox_reverse = {}
 
-        max_latitude_diff = make_max_latitude_diff(length)
-        max_longitude_diff = make_max_longitude_diff(source_radians, length)
+        max_latitude_diff = self.make_max_latitude_diff(length)
 
-        if np.abs(source_radians[0]) + max_latitude_diff <= np.pi / 2:
-            max_longitude_diff = make_max_longitude_diff(source_radians, length)
+        if (np.abs(source_radians[0]) + max_latitude_diff) <= np.pi / 2:
+            max_longitude_diff = self.make_max_longitude_diff(source_radians, length)
             bbox_front[NORTH] = source_radians[0] + max_latitude_diff
             bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
             bbox_front[EAST] = mod_longitude_radians(source_radians[1] + max_longitude_diff)
             bbox_front[WEST] = mod_longitude_radians(source_radians[1] - max_longitude_diff)
             
-        else
+        else:
             bbox_front[EAST] = np.pi / 2
             bbox_front[WEST] = -np.pi / 2
             bbox_reverse[EAST] = -np.pi / 2
@@ -110,21 +108,25 @@ class BoundingBox:
                 bbox_front[NORTH] = np.pi / 2
                 bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
                 bbox_reverse[NORTH] = np.pi / 2
-                bbox_reverse[SOUTH] = np.arcsin( np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
+                bbox_reverse[SOUTH] = np.arcsin(np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
 
 
             elif source_radians[0] - max_latitude_diff < -np.pi / 2:
                 bbox_front[NORTH] = source_radians[0] + max_latitude_diff
                 bbox_front[SOUTH] = -np.pi / 2
-                bbox_reverse[NORTH] = np.arcsin( np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
+                bbox_reverse[NORTH] = np.arcsin(np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
                 bbox_reverse[SOUTH] = -np.pi / 2
 
 
-        # bounding lat-lon of the box in degrees
+        # convert both bbox to degrees
         bbox_front = {k: degrees(v) for k, v in bbox_front.items()}
         bbox_reverse = {k: degrees(v) for k, v in bbox_reverse.items()}
         
-        return bbox_front, bbox_reverse
+        bbox = {}
+        bbox[FRONT] = bbox_front
+        bbox[REVERSE] = bbox_reverse
+        
+        return bbox
 
 
     def target_in_bounding_box(self, bbox, target):
@@ -152,8 +154,8 @@ class BoundingBox:
         return targets_filtered
 
 
-    def compute_distances_from_source(self, targets):
-        targets_distance = np.array([[target, haversine(self.source_degrees, target)] for target in targets])
+    def compute_distances_from_source(self, source_degrees, targets):
+        targets_distance = np.array([[target, haversine(source_degrees, target)] for target in targets])
         # sort by distance
         targets_dist_sorted = targets_distance[targets_distance[:,1].argsort()]
         return targets_dist_sorted
@@ -161,5 +163,5 @@ class BoundingBox:
 
     def get_points_within_bbox(self, bbox, targets):
         targets_filtered = self.filter_targets_in_bounding_box(bbox, targets)
-        targets_dist = self.compute_distances_from_source(targets_filtered)
+        targets_dist = self.compute_distances_from_source(self.source_degrees, targets_filtered)
         return targets_dist

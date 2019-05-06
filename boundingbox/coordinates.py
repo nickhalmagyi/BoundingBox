@@ -22,9 +22,9 @@ def mod_longitude_degrees(lon_degrees):
     return ((lon_degrees + 180) % 360) - 180
 
 
-def mod_longitude_radians(self, lon_radians):
+def mod_longitude_radians(lon_radians):
     """
     :param lon_radians: float for longitude in radians
     :return: float for longitude in radians but shifted to the fundamental domain.
     """
-    return radians(self.mod_longitude_degrees(degrees(lon_radians)))
+    return radians(mod_longitude_degrees(degrees(lon_radians)))
