@@ -5,7 +5,7 @@ from importlib import reload
 
 import boundingbox.validations; reload(boundingbox.validations)
 from boundingbox.validations.numbers import validate_strictly_positive_integer
-from boundingbox.validations.latlon import validate_latlons_degrees
+from boundingbox.validations.coordinates import validate_latlons_degrees
 
 from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
 

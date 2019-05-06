@@ -15,7 +15,11 @@ from importlib import reload
 
 import boundingbox.validations; reload(boundingbox.validations)
 from boundingbox.validations.numbers import validate_positive_number
-from boundingbox.validations.latlon import validate_latlons_degrees, validate_units
+from boundingbox.validations.coordinates import validate_latlons_degrees, validate_units
+
+
+import boundingbox.coordinates; reload(boundingbox.coordinates)
+from boundingbox.coordinates import convert_latlon_degrees_to_radians, mod_longitude_radians
 
 from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
 
@@ -24,10 +28,9 @@ class BoundingBox:
         self.source_degrees = source
         self.length = length
         self.units = units
-        self.source_radians = self.convert_source_to_radians(self.source_degrees)
+        self.source_radians = convert_latlon_degrees_to_radians(self.source_degrees)
         self.bbox = self.make_bounding_box(self.source_radians, self.length)
         self.earth_radius = EARTH_RADIUS[units]
-
 
 
     @property
@@ -57,30 +60,6 @@ class BoundingBox:
         validate_units(units)
         self.__units = units
 
-    def convert_source_to_radians(self, source_degrees):
-        """
-        :param source_degrees: lat-lon tuple in degrees
-        :return: lat-lon tuple in radians
-        """
-        source_radians = (radians(source_degrees[0]), radians(source_degrees[1]))
-        return source_radians
-
-
-    def mod_longitude_degrees(self, lon_deg):
-        """
-        :param lon_deg: float for longitude in degrees
-        :return: float for longitude in degrees but shifted to the fundamental domain.
-        """
-        return ((lon_deg + 180) % 360) - 180
-
-
-    def mod_longitude_radians(self, lon_rad):
-        """
-        :param lon_rad: float for longitude in radians
-        :return: float for longitude in radians but shifted to the fundamental domain.
-        """
-        return radians(self.mod_longitude_degrees(degrees(lon_rad)))
-
 
     def make_bounding_box(self, source_radians, length):
         """
@@ -101,8 +80,8 @@ class BoundingBox:
         bbox = {}
         bbox[NORTH] = min(np.pi/2, self.source_radians[0] + lat_diff)
         bbox[SOUTH] = max(-np.pi/2, self.source_radians[0] - lat_diff)
-        bbox[EAST] = self.mod_longitude_radians(source_radians[1] + lon_diff)
-        bbox[WEST] = self.mod_longitude_radians(source_radians[1] - lon_diff)
+        bbox[EAST] = mod_longitude_radians(source_radians[1] + lon_diff)
+        bbox[WEST] = mod_longitude_radians(source_radians[1] - lon_diff)
 
         # bounding lat-lon of the box in degrees
         return {k: degrees(v) for k, v in bbox.items()}
