@@ -11,12 +11,13 @@ import pandas as pd
 from math import radians
 from math import degrees
 from haversine import haversine
-
 from importlib import reload
-import arg_validations; reload(arg_validations)
-from arg_validations import validate_positive_number, validate_latlons_degrees, validate_units
 
-from settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
+import boundingbox.validations; reload(boundingbox.validations)
+from boundingbox.validations.numbers import validate_positive_number
+from boundingbox.validations.latlon import validate_latlons_degrees, validate_units
+
+from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
 
 class BoundingBox:
     def __init__(self, source, length, units=KM):
@@ -25,7 +26,6 @@ class BoundingBox:
         self.units = units
         self.source_radians = self.convert_source_to_radians(self.source_degrees)
         self.bbox = self.make_bounding_box(self.source_radians, self.length)
-        
         self.earth_radius = EARTH_RADIUS[units]
 
 

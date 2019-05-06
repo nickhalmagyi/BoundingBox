@@ -1,10 +1,13 @@
-from boundingbox import BoundingBox
+from boundingbox.boundingbox import BoundingBox
 from haversine import haversine
 import numpy as np
+from importlib import reload
 
-from arg_validations import validate_strictly_positive_integer, validate_latlons_degrees
+import boundingbox.validations; reload(boundingbox.validations)
+from boundingbox.validations.numbers import validate_strictly_positive_integer
+from boundingbox.validations.latlon import validate_latlons_degrees
 
-from settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
+from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
 
 
 def closest_points_lat_lon(source, targets, N):
