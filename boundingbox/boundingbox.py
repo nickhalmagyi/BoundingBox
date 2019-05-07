@@ -1,13 +1,8 @@
 """
 @author: Nick Halmagyi
-@company: ClimateRisk
-
-This module contains methods to filter lat-lon pairs based on a bounding box around a source
-and compute distances between a source and a pandas df of targets.
 """
 
 import numpy as np
-import pandas as pd
 from math import radians
 from math import degrees
 from haversine import haversine
@@ -67,9 +62,9 @@ class BoundingBox:
 
     def make_max_longitude_diff(self, source_radians, length):
         """
-        :param source: lat-lon pair in radians
-        :param length: 
-        :return: 
+        :param source_radians: lat-lon pair in radians
+        :param length: positive number
+        :return: the maximum longitude difference between the source and a circle of radius=length around it.
         """
         d = length / self.earth_radius
         max_longitude_arg = np.cos(source_radians[0]) ** (-1) * \
@@ -79,8 +74,12 @@ class BoundingBox:
 
     def make_bounding_box(self, source_radians, length):
         """
-        :return: dict with keys = [north, south, east, west] in degrees
-        """
+        :param source_radians: lat-lon pair in radians
+        :param length: positive number
+        :return: dict with keys = [FRONT, REVERSE], 
+        values are dicts with keys = [north, south, east, west] 
+        and values in degrees
+        """        
         bbox = {}
         bbox_front = {}
         bbox_reverse = {}
@@ -148,15 +147,20 @@ class BoundingBox:
 
     def filter_targets_in_bbox(self, bbox, targets):
         """
+        :param bbox: dict with keys = [north, south, east, west]
         :param targets: An iterable of lat-lon pairs. 
-        Each pair must be itself an iterable just containing the numerical values
-        :return: An iterable of booleans corresponding to whether or not the lat-lon pairs lie within the bounding box.
+        :return: An iterable of lat-lon pairs where each pair is inside bbox
         """
         targets_filtered = [target for target in targets if self.target_in_bounding_box(bbox, target)]
         return targets_filtered
 
 
     def filter_targets_in_bboxs(self, bboxs, targets):
+        """
+        :param bboxs: 
+        :param targets: An iterable of lat-lon pairs. 
+        :return: An iterable of lat-lon pairs where each pair is inside at least one of the bbox in bboxs
+        """    
         targets_filtered = []
         for k,v in bboxs.items():
             targets_filtered += list(self.filter_targets_in_bbox(bboxs[k], targets))
@@ -164,6 +168,11 @@ class BoundingBox:
 
 
     def compute_distances_from_source(self, source_degrees, targets):
+        """
+        :param source_degrees: lat-lon pair in degrees
+        :param targets: An iterable of lat-lon pairs. 
+        :return: np array where each element is of the form [(lat, lon), distance]
+        """
         if len(targets) == 0:
             return []
         targets_distance = np.array([[target, haversine(source_degrees, target)] for target in targets])
@@ -173,12 +182,22 @@ class BoundingBox:
 
 
     def get_points_within_bbox(self, bbox, targets):
+        """
+        :param bbox: 
+        :param targets: An iterable of lat-lon pairs. 
+        :return: np array where each element is of the form [(lat, lon), distance] and is inside bbox
+        """
         targets_filtered = self.filter_targets_in_bbox(bbox, targets)
         targets_dist = self.compute_distances_from_source(self.source_degrees, targets_filtered)
         return targets_dist
 
 
     def get_points_within_bboxs(self, bboxs, targets):
+        """
+        :param bboxs: dict where values are dicts with keys = [north, south, east, west]
+        :param targets: An iterable of lat-lon pairs. 
+        :return: all locations in targets which are inside ANY of the bbox in bboxs
+        """
         targets_dist = []
         for k,v in bboxs.items():
             targets_dist += list(self.get_points_within_bbox(bboxs[k], targets))
