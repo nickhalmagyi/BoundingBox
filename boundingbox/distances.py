@@ -81,7 +81,7 @@ def get_closest_N_points(source, targets, N, length):
     targets_filtered = boundingbox.filter_targets_in_bounding_box(targets)
     targets_distance = boundingbox.compute_distances_from_source(targets_filtered)
     
-    i = 0
+    # i = 0
     while (len(targets_distance) < N) or not closest_points_are_within_length(targets_distance, N, boundingbox.length):
         
     # rescale 
@@ -99,8 +99,8 @@ def get_closest_N_points(source, targets, N, length):
         targets_filtered = boundingbox.filter_targets_in_bounding_box(targets)
         targets_distance = boundingbox.compute_distances_from_source(targets_filtered)
         
-        i += 1
-        if i == 4:
-            break
+        # i += 1
+        # if i == 4:
+        #     break
 
     return targets_distance[:N]

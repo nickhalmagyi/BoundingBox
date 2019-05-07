@@ -99,39 +99,42 @@ the Haversine formula gives
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Maximum longitude}
-Given a section of equal distance $d$ from the source $\varphi_1, \lam_1$ we want to know the maximum of $|\lam_2-\lam_1|$.
+Given a section of equal distance $d$ from the source $S=(\varphi_1, \lam_1)$ we want to know the maximum longitudinal distance, i.e. the maximum value of $|\lam_2-\lam_1|$. These will be the east and west boundaries of the bounding box.
 
-Lets first look at an ellipse
+As a warmup, we first look at an ellipse in $\RR^2$
 \be
-a^2 x^2 + b^2 y^2 = 1
+a^2 x^2 + b^2 y^2 = 1.
 \ee
-solve for $x$
+We solve for $x$
 \bea
-x(y) &= & \frac{1}{a}\sqrt{(1- b^2 y^2 )} \,, \qquad x'(y) = \frac{1}{a}\frac{2b^2y}{(1- b^2 y^2 )}
+x(y) &= & \frac{1}{a}\sqrt{(1- b^2 y^2 )} 
+\eea
+and compute the variation of $x$ w.r.t. $y$ 
+\bea
+x'(y) = \frac{1}{a}\frac{2b^2y}{(1- b^2 y^2 )}\,.
 \eea 
-so the extremum are at $y=0$.
+We then note that the extremum of $x$ are at $y=0$.
 
-So we fix $(\varphi_1, \lam_1)$ and find the extremum of $\lam_2$. We change coordinates to
+To perform a similar analysis for a circle on $S^2$, we fix $d$ and $(\varphi_1, \lam_1)$ then find the extremum of $\lam_2$ as a function of $\vphi_2$. It is convenient to change coordinates to
 \be
 \Lam= \cos\blp\lam_1-\lam_2(\vphi_2)\brp\,,\qquad \Psi = \sin \vphi_2
 \ee
-and find that the equations to be solved are
+then the equations to be solved are
 \bea
 \csc \vphi_1\cos \frac{d}{R}&=&\cot \vphi_1 \Lam \sqrt{1-\Psi^2}  +\Psi \\
 \cot \vphi_1\Lam \Psi &=& \sqrt{1-\Psi^2}
 \eea
-
 The solution is 
 \bea
 \Lam &=& \sec(\vphi_1 ) \sqrt{\cos^2 \blp\frac{d}{R}\brp - \sin^2 (\vphi_1)} \\
 \Psi &=&\sec \blp\frac{d}{R}\brp  \sin \vphi_1
 \eea
 
-There is a branch point at one of the following points:
+There is a branch point  in $\Lam$ at one of the following points:
 \be
 {\rm b.p.} \quad \vphi_1 \pm \frac{d}{R} = \pm \pi/2
 \ee
-which is where the bounding section touching the north(south) pole. At this point the maximum longitude reached is $\lam_2-\lam_1 = \pi/2$ which is half way around the glode (though not necessarily at the equator)
+which is where the bounding section touches the north(south) pole. At this point the maximum longitude reached is $\lam_2-\lam_1 = \pi/2$ which is half way around the globe (though not necessarily at the equator).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
