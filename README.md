@@ -1,4 +1,13 @@
-# boundingbox
+# Bounding Box
+
+The main purpose of this repo is to efficiently perform certain geographic computations.
+Specfically, taking a list of lat-lon pairs (targets) and a single lat-lon pair (source), using this code one can compute
+the N-closest locations from targets to the source. One can also compute all locations in targets within a given distance.
+
+
+This is performed efficiently by creating a bounding box and only computing distances from the source to the
+locations within the box.  
+
 
 Example:  
 
