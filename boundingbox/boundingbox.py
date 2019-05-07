@@ -81,11 +81,14 @@ class BoundingBox:
         """
         :return: dict with keys = [north, south, east, west] in degrees
         """
+        bbox = {}
         bbox_front = {}
         bbox_reverse = {}
 
         max_latitude_diff = self.make_max_latitude_diff(length)
 
+        # print("np.abs(source_radians[0]): ", np.abs(source_radians[0]))
+        # print("max_latitude_diff: ", max_latitude_diff)
         if (np.abs(source_radians[0]) + max_latitude_diff) <= np.pi / 2:
             max_longitude_diff = self.make_max_longitude_diff(source_radians, length)
             bbox_front[NORTH] = source_radians[0] + max_latitude_diff
@@ -116,15 +119,14 @@ class BoundingBox:
                 bbox_front[SOUTH] = -np.pi / 2
                 bbox_reverse[NORTH] = np.arcsin(np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
                 bbox_reverse[SOUTH] = -np.pi / 2
+            
+            bbox_reverse = {k: degrees(v) for k, v in bbox_reverse.items()}
+            bbox[REVERSE] = bbox_reverse
 
 
         # convert both bbox to degrees
         bbox_front = {k: degrees(v) for k, v in bbox_front.items()}
-        bbox_reverse = {k: degrees(v) for k, v in bbox_reverse.items()}
-        
-        bbox = {}
         bbox[FRONT] = bbox_front
-        bbox[REVERSE] = bbox_reverse
         
         return bbox
 
@@ -144,13 +146,20 @@ class BoundingBox:
         return lat and lon
 
 
-    def filter_targets_in_bounding_box(self, bbox, targets):
+    def filter_targets_in_bbox(self, bbox, targets):
         """
         :param targets: An iterable of lat-lon pairs. 
         Each pair must be itself an iterable just containing the numerical values
         :return: An iterable of booleans corresponding to whether or not the lat-lon pairs lie within the bounding box.
         """
         targets_filtered = [target for target in targets if self.target_in_bounding_box(bbox, target)]
+        return targets_filtered
+
+
+    def filter_targets_in_bboxs(self, bboxs, targets):
+        targets_filtered = []
+        for k,v in bboxs.items():
+            targets_filtered += list(self.filter_targets_in_bbox(bboxs[k], targets))
         return targets_filtered
 
 
@@ -162,6 +171,13 @@ class BoundingBox:
 
 
     def get_points_within_bbox(self, bbox, targets):
-        targets_filtered = self.filter_targets_in_bounding_box(bbox, targets)
+        targets_filtered = self.filter_targets_in_bbox(bbox, targets)
         targets_dist = self.compute_distances_from_source(self.source_degrees, targets_filtered)
+        return targets_dist
+
+
+    def get_points_within_bboxs(self, bboxs, targets):
+        targets_dist = []
+        for k,v in bboxs.items():
+            targets_dist += list(self.get_points_within_bbox(bboxs[k], targets))
         return targets_dist

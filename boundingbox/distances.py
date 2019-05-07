@@ -49,7 +49,7 @@ def get_all_points_within_distance(source, targets, length):
     validate_latlons_degrees(targets)
 
     boundingbox = BoundingBox(source, length)
-    targets_in_bbox = boundingbox.get_points_within_bbox(targets)
+    targets_in_bbox = boundingbox.get_points_within_bboxs(boundingbox.bbox, targets)
     targets_within_distance = []
     for target in targets_in_bbox:
         if target[1] <= length:
@@ -69,7 +69,7 @@ def closest_points_are_within_length(targets_distance, N, length):
     return targets_distance[:N][-1][1] <= length
 
 
-def get_closest_N_points(source, targets, N, length):
+def get_closest_N_points(source_degrees, targets, N, length):
     validate_strictly_positive_integer(N)
     validate_latlons_degrees(targets)
 
@@ -77,9 +77,9 @@ def get_closest_N_points(source, targets, N, length):
         # should just return all targets with distance and sorted by distance
         N = len(targets)
 
-    boundingbox = BoundingBox(source, length)
-    targets_filtered = boundingbox.filter_targets_in_bounding_box(targets)
-    targets_distance = boundingbox.compute_distances_from_source(targets_filtered)
+    boundingbox = BoundingBox(source_degrees, length)
+    targets_filtered = boundingbox.filter_targets_in_bboxs(boundingbox.bbox, targets)
+    targets_distance = boundingbox.compute_distances_from_source(source_degrees, targets_filtered)
     
     # i = 0
     while (len(targets_distance) < N) or not closest_points_are_within_length(targets_distance, N, boundingbox.length):
