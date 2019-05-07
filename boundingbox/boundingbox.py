@@ -87,8 +87,6 @@ class BoundingBox:
 
         max_latitude_diff = self.make_max_latitude_diff(length)
 
-        # print("np.abs(source_radians[0]): ", np.abs(source_radians[0]))
-        # print("max_latitude_diff: ", max_latitude_diff)
         if (np.abs(source_radians[0]) + max_latitude_diff) <= np.pi / 2:
             max_longitude_diff = self.make_max_longitude_diff(source_radians, length)
             bbox_front[NORTH] = source_radians[0] + max_latitude_diff
@@ -122,7 +120,7 @@ class BoundingBox:
             
             bbox_reverse = {k: degrees(v) for k, v in bbox_reverse.items()}
             bbox[REVERSE] = bbox_reverse
-
+        
 
         # convert both bbox to degrees
         bbox_front = {k: degrees(v) for k, v in bbox_front.items()}
@@ -138,11 +136,13 @@ class BoundingBox:
         :return: boolean for source living within the bounding box
         """
         lat = (target[0] >= bbox[SOUTH]) and (target[0] <= bbox[NORTH])
-        if bbox[WEST] <= bbox[EAST]:
-            lon = (target[1] >= bbox[WEST]) and (target[1] <= bbox[EAST])
-        else:
-            lon = (target[1] >= bbox[EAST]) or (target[1] <= bbox[WEST])
-
+        
+        right = max(bbox[WEST], bbox[EAST])
+        left = min(bbox[WEST], bbox[EAST])
+        
+        lon = (target[1] >= left) and (target[1] <= right)
+        if bbox[WEST] > bbox[EAST]:
+            lon = not lon
         return lat and lon
 
 
@@ -164,8 +164,10 @@ class BoundingBox:
 
 
     def compute_distances_from_source(self, source_degrees, targets):
+        if len(targets) == 0:
+            return []
         targets_distance = np.array([[target, haversine(source_degrees, target)] for target in targets])
-        # sort by distance
+        # sort by haversine distance
         targets_dist_sorted = targets_distance[targets_distance[:,1].argsort()]
         return targets_dist_sorted
 
