@@ -1,9 +1,4 @@
-"""
-@author: Nick Halmagyi
-"""
-
 import numpy as np
-from math import radians
 from math import degrees
 from haversine import haversine
 from importlib import reload
