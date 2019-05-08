@@ -1,7 +1,7 @@
 
 \documentclass[preprint,12pt]{article}
 
-\usepackage{amsmath,amssymb,array, amscd, comment, color, datetime}
+\usepackage{hyperref, amsmath,amssymb,array, amscd, comment, color, datetime}
 
 %\usepackage{color}
 %\usepackage[
@@ -44,18 +44,25 @@ halmagyi@lpthe.jussieu.fr \\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-A common problem is data-science is the following: given a single geographic location $S$ (the  source) and a set of geographic locations $\widehat{T}$ (the targets), determine the closest $N$ locations $t_i \in \widehat{T}$  to $S$. One can achieve this by computing the distance from every target to the source $d(t_i, S)$ but this is prohibitively slow for moderately large set of targets.
+A common problem is data-science is the following: given a single geographic location $S$ (the  source) and a set of geographic locations $\widehat{T}$ (the targets), determine the closest $N$ locations $t_i \in \widehat{T}$  to $S$. One can achieve this by computing the distance $d(t_i, S)$ from every target to the source but this is prohibitively slow even for a moderately large set of targets. A better solution is to make a bounding region $\cB$ around $S$ and compute the distance  $d(t_i,S)$ only for the $t_i \in \cB$. For well constructed $\cB$ one will find the $N$ closest points within $\cB$. 
 
-A better solution is to make a bounding region $\cB$ around $S$ and compute the distance from each $d(t_i,S)$ for each $t_i \in \cB$. For well constructed $\cB$ one can hope to find the $N$ closest points within $\cB$.
+There are numerous ways to store a set of geographic locations in memory or on disk but regardless of which specific method is utilized, the process of filtering $\widehat{T}$ down to the set of $t_i\in \cB$ is fast as it only involves a few numerical comparisons per target.
 
 
-Geographic locations are typically given in the longitude-latitude coordinate system
+Geographic locations are typically given in the longitude-latitude coordinate system, so $\cB$ should be constructed from lines of equal latitude and lines of equal longitude. This results in $\cB$ which look roughly square close to the equator and a sort of curved triangle when near the poles. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Haversine Formula}
+\section{Constructing the Bounding Box}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We denote $C_d$ the equidistant surface around $S$. it is the collection of points on the sphere which are at a distance $d$ from $S$.  To construct the bounding box $\cB$, we need to determine the minimum and maximum values of latitide and longitude attained by $C_d$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Haversine Formula}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
- The Haversine formula gives the distance between two points on the sphere in the latitude-longitude coordinate system: 
+The Haversine formula gives the distance between two points on the sphere in the latitude-longitude coordinate system: 
  \be
  \sin^2\Blp \frac{d}{2R}\Brp= \sin^2\Blp \frac{\vphi_1-\vphi_2}{2} \Brp+ \cos \vphi_1\cos \vphi_2 \sin^2\Blp \frac{\lam_1-\lam_2}{2}\Brp
  \ee
@@ -64,30 +71,9 @@ Geographic locations are typically given in the longitude-latitude coordinate sy
 \cos \frac{d}{R} &=& \sin \vphi_1 \sin \vphi_2 + \cos (\lam_2 - \lam_1)   \cos \vphi_1 \cos \vphi_2\,.
  \eea
 where $R$ is the radius of the sphere.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Equal Latitude}
-When two latitudes are equal 
-\be
-\vphi_1=\vphi_2 = \vphi
-\ee
-we have
-\bea
-d &=&  2R \sin^{-1} \Big| \cos \vphi   \sin \Blp \frac{\lam_1-\lam_2}{2}\Brp \Big|  \\
-\Ra \quad |\lam_1 - \lam_2| &=& 2\left|\sin^{-1}\left[ \frac{\sin\left(\frac{d}{2R}\right)}{\cos(\varphi)}\right]\right|\,.
-\eea
-The maximum longitudinal difference between two points is 
-\be
-|\lam_2-\lam_1|_{\rm max} = \pi
-\ee
-which occurs when
-\be
-\sin\left(\frac{d}{2R}\right)  = \cos(\varphi)\,.
-\ee
- 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Equal Longitudes}
- When two longitudes are equal 
+\subsection{Maximum Latitude}
+The maximum latitude on $C_d$ is attained when the longitude is the same as the longitude of $S$.  When two longitudes are equal 
  \be
  \lam_2=\lam_1
  \ee
@@ -98,13 +84,17 @@ the Haversine formula gives
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Maximum longitude}
-Given a section of equal distance $d$ from the source $S=(\varphi_1, \lam_1)$ we want to know the maximum longitudinal distance, i.e. the maximum value of $|\lam_2-\lam_1|$. These will be the east and west boundaries of the bounding box.
+\subsection{Maxmimum Longitude}
 
-As a warmup, we first look at an ellipse in $\RR^2$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Ellipse}
+
+To warm up to the computation of  the point of maximum longitude, we first look at an ellipse in $\RR^2$:
 \be
-a^2 x^2 + b^2 y^2 = 1.
+a^2 x^2 + b^2 y^2 = 1 
 \ee
+and look for the maximum value of $x$.
+
 We solve for $x$
 \bea
 x(y) &= & \frac{1}{a}\sqrt{(1- b^2 y^2 )} 
@@ -113,9 +103,14 @@ and compute the variation of $x$ w.r.t. $y$
 \bea
 x'(y) = \frac{1}{a}\frac{2b^2y}{(1- b^2 y^2 )}\,.
 \eea 
-We then note that the extremum of $x$ are at $y=0$.
+The extremum of $x$ are of course at the point where $x'(y)=0$ and this is at $y=0$, in particular on the $x$-axis.
 
-To perform a similar analysis for a circle on $S^2$, we fix $d$ and $(\varphi_1, \lam_1)$ then find the extremum of $\lam_2$ as a function of $\vphi_2$. It is convenient to change coordinates to
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Back to the Sphere}
+Given a section of equal distance $d$ from the source $S=(\varphi_1, \lam_1)$ we want to know the maximum longitudinal distance, i.e. the maximum value of $|\lam_2-\lam_1|$. These will be the east and west boundaries of the bounding box.
+
+We first fix $d$ and $(\varphi_1, \lam_1)$ then look for the extremum of $\lam_2$ as a function of $\vphi_2$. It is convenient to change coordinates to
 \be
 \Lam= \cos\blp\lam_1-\lam_2(\vphi_2)\brp\,,\qquad \Psi = \sin \vphi_2
 \ee
@@ -138,22 +133,33 @@ which is where the bounding section touches the north(south) pole. At this point
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Intersection with $\lam_2-\lam_1 = \frac{\pi}{2}$}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Equal  Latitude}
 
-We want to know, when 
+One can also consider a related but inequivalent question, which is for the shortest distance between two points of equal latitude. This is slightly non-trivial since the great circle between two points does not follow lines of equal latitude unless both points are on the equator. Indeed in this interesting \href{http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates}{blog post} the author realises the distinction between great circles and lines of constant latitude but mistakenly assumes that the maximum longitude is attained at the same latitude as the source $S$. 
+
+To compute the distance between two points of equal latitude, we use the Haversine formula with
 \be
-\varphi_2-\varphi_1 > \frac{d}{R}
+\vphi_1=\vphi_2 = \vphi\,.
 \ee
-so that the bounding circle does not reach the pole. Can the bounding circle extend more than  $\pi/2$ in longitude.
-When $\lam_2-\lam_1 = \pi/2$ we have
- \bea
-\cos \frac{d}{R} &=& \sin \vphi_1 \sin \vphi_2 
- \eea
- which will give a solution when
- \be
- \cos \frac{d}{R}< \sin\vphi_1
- \ee
+Then we find
+\bea
+d &=&  2R \sin^{-1} \Big| \cos \vphi   \sin \Blp \frac{\lam_1-\lam_2}{2}\Brp \Big|  \\
+\Ra \quad |\lam_1 - \lam_2| &=& 2\left|\sin^{-1}\left[ \frac{\sin\left(\frac{d}{2R}\right)}{\cos(\varphi)}\right]\right|\,.
+\eea
+%The maximum longitudinal difference between two points is 
+%\be
+%|\lam_2-\lam_1|_{\rm max} = \pi
+%\ee
+%which occurs when
+%\be
+%\sin\left(\frac{d}{2R}\right)  = \cos(\varphi)\,.
+%\ee
+ 
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{/Users/Halmagyi/Dropbox/utphys} 
 \bibliography{/Users/Halmagyi/Dropbox/myrefs}

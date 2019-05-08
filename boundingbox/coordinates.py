@@ -1,3 +1,7 @@
+"""
+Functions which perform operations on the latitude-longitude coordinate system.
+"""
+
 from math import radians
 from math import degrees
 

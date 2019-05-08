@@ -103,12 +103,14 @@ class BoundingBox:
                 bbox_front[NORTH] = np.pi / 2
                 bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
                 bbox_reverse[NORTH] = np.pi / 2
+                # bbox_reverse[SOUTH] is the point at which the circle intersects lon =  90 and -90 degrees.
                 bbox_reverse[SOUTH] = np.arcsin(np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
 
 
             elif source_radians[0] - max_latitude_diff < -np.pi / 2:
                 bbox_front[NORTH] = source_radians[0] + max_latitude_diff
                 bbox_front[SOUTH] = -np.pi / 2
+                # bbox_reverse[NORTH] is the point at which the circle intersects lon =  90 and -90 degrees.
                 bbox_reverse[NORTH] = np.arcsin(np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
                 bbox_reverse[SOUTH] = -np.pi / 2
             

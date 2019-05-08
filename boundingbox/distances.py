@@ -37,7 +37,7 @@ def make_bounding_box_length(source, lat_lons, N=1):
     return bbox_length
 
 
-def get_all_points_within_distance(source, targets, length):
+def get_points_within_distance(source, targets, length):
     """
     It is possible for a point to be within the bbox but further than length from source.
     Here we remove such points.
@@ -69,8 +69,8 @@ def closest_points_are_within_length(targets_distance, N, length):
     return targets_distance[:N][-1][1] <= length
 
 
-def get_closest_N_points(source_degrees, targets, N, length=None):
-    # print("get_closest_N_points")
+def get_closest_points(source_degrees, targets, N, length=None):
+    # print("get_closest_points")
     # print("targets: ", targets)
     validate_strictly_positive_integer(N)
     validate_latlons_degrees(targets)
