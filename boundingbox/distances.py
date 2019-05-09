@@ -19,10 +19,7 @@ def get_points_within_distance(source, targets, length):
     """
     boundingbox = BoundingBox(source, length)
     targets_in_bbox = boundingbox.get_points_within_bboxs(targets, boundingbox.bbox)
-    targets_within_distance = []
-    for target in targets_in_bbox:
-        if target[1] <= length:
-            targets_within_distance.append(target)
+    targets_within_distance = targets_in_bbox[np.transpose(targets_in_bbox)[1] <= length]
     return targets_within_distance
 
 

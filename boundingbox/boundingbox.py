@@ -193,4 +193,4 @@ class BoundingBox:
         
         for k,v in bboxs.items():
             targets_dist += list(self.get_points_within_bbox(targets, bboxs[k]))
-        return targets_dist
+        return np.array(targets_dist)
