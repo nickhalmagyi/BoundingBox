@@ -124,43 +124,37 @@ class BoundingBox:
         
         return bbox
 
+    def target_in_bounding_box_front(self, target, bbox):
+        return (target[0] >= bbox[SOUTH]) & (target[0] <= bbox[NORTH]) & (target[1] >= bbox[WEST]) & (target[1] <= bbox[EAST])
 
-    def target_in_bounding_box(self, bbox, target):
-        """
-        :param bbox: dict with keys = [north, south, east, west]
-        :param target_degrees: tuple (lat, lon) in degrees
-        :return: boolean for source living within the bounding box
-        """
-        lat = (target[0] >= bbox[SOUTH]) and (target[0] <= bbox[NORTH])
-        
-        right = max(bbox[WEST], bbox[EAST])
-        left = min(bbox[WEST], bbox[EAST])
-        
-        lon = (target[1] >= left) and (target[1] <= right)
-        if bbox[WEST] > bbox[EAST]:
-            lon = not lon
-        return lat and lon
+    def target_in_bounding_box_reverse(self, target, bbox):
+        return (target[0] >= bbox[SOUTH]) & (target[0] <= bbox[NORTH]) & ~((target[1] >= bbox[WEST]) & (target[1] <= bbox[EAST]))
 
 
-    def filter_targets_in_bbox(self, bbox, targets):
-        """
-        :param bbox: dict with keys = [north, south, east, west]
-        :param targets: An iterable of lat-lon pairs. 
-        :return: An iterable of lat-lon pairs where each pair is inside bbox
-        """
-        targets_filtered = [target for target in targets if self.target_in_bounding_box(bbox, target)]
-        return targets_filtered
+    def filter_targets_in_bbox(self, targets, bbox):
+            """
+            :param targets: An iterable of lat-lon pairs. 
+            :param bbox: dict with keys = [north, south, east, west]
+            :return: An iterable of lat-lon pairs where each pair is inside bbox
+            """
+            if bbox[WEST] <= bbox[EAST]:
+                target_in_bounding_box = self.target_in_bounding_box_front
+            else:
+                target_in_bounding_box = self.target_in_bounding_box_reverse
+
+            return targets[target_in_bounding_box(np.transpose(targets), bbox)]
 
 
-    def filter_targets_in_bboxs(self, bboxs, targets):
+    def filter_targets_in_bboxs(self, targets, bboxs):
         """
         :param bboxs: 
         :param targets: An iterable of lat-lon pairs. 
         :return: An iterable of lat-lon pairs where each pair is inside at least one of the bbox in bboxs
         """    
+        print('bboxs: ', bboxs)
         targets_filtered = []
         for k,v in bboxs.items():
-            targets_filtered += list(self.filter_targets_in_bbox(bboxs[k], targets))
+            targets_filtered += list(self.filter_targets_in_bbox(targets, bboxs[k]))
         return targets_filtered
 
 
@@ -178,24 +172,25 @@ class BoundingBox:
         return targets_dist_sorted
 
 
-    def get_points_within_bbox(self, bbox, targets):
+    def get_points_within_bbox(self, targets, bbox):
         """
         :param bbox: 
         :param targets: An iterable of lat-lon pairs. 
         :return: np array where each element is of the form [(lat, lon), distance] and is inside bbox
         """
-        targets_filtered = self.filter_targets_in_bbox(bbox, targets)
+        targets_filtered = self.filter_targets_in_bbox(targets, bbox)
         targets_dist = self.compute_distances_from_source(self.source_degrees, targets_filtered)
         return targets_dist
 
 
-    def get_points_within_bboxs(self, bboxs, targets):
+    def get_points_within_bboxs(self, targets, bboxs):
         """
         :param bboxs: dict where values are dicts with keys = [north, south, east, west]
         :param targets: An iterable of lat-lon pairs. 
         :return: all locations in targets which are inside ANY of the bbox in bboxs
         """
         targets_dist = []
+        
         for k,v in bboxs.items():
-            targets_dist += list(self.get_points_within_bbox(bboxs[k], targets))
+            targets_dist += list(self.get_points_within_bbox(targets, bboxs[k]))
         return targets_dist

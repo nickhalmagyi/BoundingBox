@@ -64,9 +64,9 @@ class TestBoundingBox(unittest.TestCase):
         bbox = self.boundingbox_paris.make_bounding_box(paris_radians, 100)
         self.assertEqual(bbox, bbox_paris_100)
 
-    def test_target_in_bounding_box(self):
-        self.assertEqual(self.boundingbox_paris.target_in_bounding_box(bbox_paris_100[FRONT], paris), True)
-        self.assertEqual(self.boundingbox_paris.target_in_bounding_box(bbox_paris_100_switch[FRONT], paris), False)
+    def test_target_in_bounding_box_front(self):
+        self.assertEqual(self.boundingbox_paris.target_in_bounding_box_front(paris, bbox_paris_100[FRONT]), True)
+        self.assertEqual(self.boundingbox_paris.target_in_bounding_box_front(paris, bbox_paris_100_switch[FRONT]), False)
 
         
         

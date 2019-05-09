@@ -6,8 +6,6 @@ from importlib import reload
 import boundingbox.validations; reload(boundingbox.validations)
 from boundingbox.validations.numbers import validate_strictly_positive_integer
 from boundingbox.validations.coordinates import validate_latlons_degrees
-from boundingbox.distances import make_bounding_box_length
-from boundingbox.settings import EARTH_RADIUS, NORTH, SOUTH, EAST, WEST, KM, MILES
 
 
 def closest_points_lat_lon(source, targets, N):
@@ -49,7 +47,8 @@ def get_points_within_distance(source, targets, length):
     validate_latlons_degrees(targets)
 
     boundingbox = BoundingBox(source, length)
-    targets_in_bbox = boundingbox.get_points_within_bboxs(boundingbox.bbox, targets)
+    print("boundingbox.bbox: ", boundingbox.bbox)
+    targets_in_bbox = boundingbox.get_points_within_bboxs(targets, boundingbox.bbox)
     targets_within_distance = []
     for target in targets_in_bbox:
         if target[1] <= length:
@@ -83,7 +82,7 @@ def get_closest_points(source_degrees, targets, N, length=None):
         length = make_bounding_box_length(source_degrees, targets, N)
 
     boundingbox = BoundingBox(source_degrees, length)
-    targets_filtered = boundingbox.filter_targets_in_bboxs(boundingbox.bbox, targets)
+    targets_filtered = boundingbox.filter_targets_in_bboxs(targets, boundingbox.bbox, )
     print("targets_filtered: ", targets_filtered)
     targets_distance = boundingbox.compute_distances_from_source(source_degrees, targets_filtered)
     
@@ -102,7 +101,7 @@ def get_closest_points(source_degrees, targets, N, length=None):
                 boundingbox.length = Nth_point_distance
 
         boundingbox.bbox = boundingbox.make_bounding_box(boundingbox.source_radians, boundingbox.length)
-        targets_filtered = boundingbox.filter_targets_in_bboxs(boundingbox.bbox, targets)
+        targets_filtered = boundingbox.filter_targets_in_bboxs(targets, boundingbox.bbox)
         targets_distance = boundingbox.compute_distances_from_source(source_degrees, targets_filtered)
         
         # i += 1
