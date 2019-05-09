@@ -1,7 +1,7 @@
 
 \documentclass[preprint,12pt]{article}
 
-\usepackage{hyperref, amsmath,amssymb,array, amscd, comment, color, datetime}
+\usepackage{hyperref, amsmath,amssymb,array, amscd, comment, color, datetime, graphicx}
 
 %\usepackage{color}
 %\usepackage[
@@ -38,31 +38,38 @@ Nick Halmagyi\
 Universit\'e Pierre et Marie Curie, CNRS UMR 7589, \\
 F-75252 Paris Cedex 05, France}\\
 \vskip0.5cm
-halmagyi@lpthe.jussieu.fr \\
+nhalmagyi@gmail.com \\
 \end{center}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-A common problem is data-science is the following: given a single geographic location $S$ (the  source) and a set of geographic locations $\widehat{T}$ (the targets), determine the closest $N$ locations $t_i \in \widehat{T}$  to $S$. One can achieve this by computing the distance $d(t_i, S)$ from every target to the source but this is prohibitively slow even for a moderately large set of targets. A better solution is to make a bounding region $\cB$ around $S$ and compute the distance  $d(t_i,S)$ only for the $t_i \in \cB$. For well constructed $\cB$ one will find the $N$ closest points within $\cB$. 
 
-There are numerous ways to store a set of geographic locations in memory or on disk but regardless of which specific method is utilized, the process of filtering $\widehat{T}$ down to the set of $t_i\in \cB$ is fast as it only involves a few numerical comparisons per target.
+It is quite common in data science to manipulate geographic data in the form of the geodetic coordinates (latitude, longitude) of locations on the globe. It oftens happens that one has a single geographic location $S$ (the  source) and a set of geographic locations $\widehat{T}$ (the targets) and would like to answer one of the following questions:
+\begin{enumerate}
+\item return the closest $N$ targets in  $\widehat{T}$ to $S$
+\item return all targets in $\widehat{T}$ within a given distance $d$ to $S$
+\end{enumerate}
+One can solve this by computing the distance $d(t_i, S)$ from every target to the source but for sufficiently large  $\widehat{T}$ this can be too slow for many purposes. A better solution is to make a bounding region $\cB$ around $S$ and compute the distance  $d(t_i,S)$ only for the $t_i \in \cB$. 
 
+There are numerous ways to store a set of geographic locations in memory or on disk. For this bounding box algorithm useful one must utilize a fast method of filtering $\widehat{T}$ to those inside $\cB$. We have provided a \href{https://github.com/nickhalmagyi/BoundingBox}{python library} which does this. 
 
-Geographic locations are typically given in the longitude-latitude coordinate system, so $\cB$ should be constructed from lines of equal latitude and lines of equal longitude. This results in $\cB$ which look roughly square close to the equator and a sort of curved triangle when near the poles. 
+Geographic locations are typically given in the longitude-latitude coordinate system, so $\cB$ should be constructed from lines of equal latitude and lines of equal longitude. This results in $\cB$ which look roughly square close to the equator and a sort of curved quadrilateral when near the poles and finally a semi-circle when the box touches a pole.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Constructing the Bounding Box}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We denote $C_d$ the equidistant surface around $S$. it is the collection of points on the sphere which are at a distance $d$ from $S$.  To construct the bounding box $\cB$, we need to determine the minimum and maximum values of latitide and longitude attained by $C_d$.
+We denote by $C_d$ the equidistant surface around $S$, it is the collection of points on the sphere which are exactly at a distance $d$ from $S$.  To construct the bounding box $\cB$, we need to determine the minimum and maximum values of latitide and longitude attained by $C_d$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Haversine Formula}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
-The Haversine formula gives the distance between two points on the sphere in the latitude-longitude coordinate system: 
+Two common methods to compute distances on the sphere are the Haversine and Vincenty metrics. Both metrics use the geodetic coordintae system, the Haversine formula assumes the earth is exactly spherical while the Vincenty metric inclues the oblateness of the earth. In this work we will use the Haversine formula as an approximation to the true distance between points.
+
+The Haversine distance $d$ between two points $(\vphi_1,\lam_1)$ and $(\vphi_2,\lam_2)$ is 
  \be
  \sin^2\Blp \frac{d}{2R}\Brp= \sin^2\Blp \frac{\vphi_1-\vphi_2}{2} \Brp+ \cos \vphi_1\cos \vphi_2 \sin^2\Blp \frac{\lam_1-\lam_2}{2}\Brp
  \ee
@@ -135,7 +142,7 @@ which is where the bounding section touches the north(south) pole. At this point
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Equal  Latitude}
 
-One can also consider a related but inequivalent question, which is for the shortest distance between two points of equal latitude. This is slightly non-trivial since the great circle between two points does not follow lines of equal latitude unless both points are on the equator. Indeed in this interesting \href{http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates}{blog post} the author realises the distinction between great circles and lines of constant latitude but mistakenly assumes that the maximum longitude is attained at the same latitude as the source $S$. 
+One can also consider a related but inequivalent question, which is to contruct the shortest distance between two points of equal latitude. This is slightly non-trivial since the great circle between two points does not follow lines of equal latitude unless both points are on the equator. Indeed in this interesting \href{http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates}{blog post} the author realises the distinction between great circles and lines of constant latitude but mistakenly assumes that the maximum longitude is attained at the same latitude as the source $S$. 
 
 To compute the distance between two points of equal latitude, we use the Haversine formula with
 \be
@@ -157,8 +164,19 @@ d &=&  2R \sin^{-1} \Big| \cos \vphi   \sin \Blp \frac{\lam_1-\lam_2}{2}\Brp \Bi
  
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Constructing the Bounding Box}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Pole Inside Bounding Box}
 
+When the north or south pole is within a distance $d$ from $S$, the naive bounding box with cross the pole and therefore occupy all values of longitude. We proceed by constructing two bounding boxes, $\cB_f$ (the {\it front}) for the longitude region of width $\pi$ centered on $S$ and another $\cB_r$ (the {\it reverse}) for the remainding $\pi$-sized region. When the pole is is the north (south) pole, then the south(north) limit of $\cB_f$ is determined by the point on $C_d$ directly souht(north) of $S$ while the south(north) limit of the $\cB_r$is determined by the intersection of $C_d$ with the constant longitude lines of $\cB_f$. This is demonstrated in figure \ref{fig:bbox_reverse}:
+\begin{figure}[bth!]
+  \includegraphics[width=\linewidth]{bbox_reverse}
+  \caption{Construction of the two bounding boxes around $S$, where $S$ is near a pole on the sphere. The bounding boxes are marked by dashed lines and appear as hemispheres.  The equidistant surface is in red. The radial lines are at constant longitude, intersecting at the pole in the center of the figure.}
+  \label{fig:bbox_reverse}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{/Users/Halmagyi/Dropbox/utphys} 
