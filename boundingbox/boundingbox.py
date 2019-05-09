@@ -2,6 +2,7 @@ import numpy as np
 from math import degrees
 from haversine import haversine
 from importlib import reload
+import time
 
 import boundingbox.validations; reload(boundingbox.validations)
 from boundingbox.validations.numbers import validate_positive_number
@@ -128,7 +129,7 @@ class BoundingBox:
         return (target[0] >= bbox[SOUTH]) & (target[0] <= bbox[NORTH]) & (target[1] >= bbox[WEST]) & (target[1] <= bbox[EAST])
 
     def target_in_bounding_box_reverse(self, target, bbox):
-        return (target[0] >= bbox[SOUTH]) & (target[0] <= bbox[NORTH]) & ~((target[1] >= bbox[WEST]) & (target[1] <= bbox[EAST]))
+        return 1 == (target[0] >= bbox[SOUTH]) & (target[0] <= bbox[NORTH]) & ~((target[1] >= bbox[EAST]) & (target[1] <= bbox[WEST]))
 
 
     def filter_targets_in_bbox(self, targets, bbox):
@@ -150,8 +151,7 @@ class BoundingBox:
         :param bboxs: 
         :param targets: An iterable of lat-lon pairs. 
         :return: An iterable of lat-lon pairs where each pair is inside at least one of the bbox in bboxs
-        """    
-        print('bboxs: ', bboxs)
+        """
         targets_filtered = []
         for k,v in bboxs.items():
             targets_filtered += list(self.filter_targets_in_bbox(targets, bboxs[k]))

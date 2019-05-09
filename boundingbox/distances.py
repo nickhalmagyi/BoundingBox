@@ -1,6 +1,7 @@
 from boundingbox.boundingbox import BoundingBox
 from haversine import haversine
 import numpy as np
+import time
 from importlib import reload
 
 import boundingbox.validations; reload(boundingbox.validations)
@@ -47,7 +48,6 @@ def get_points_within_distance(source, targets, length):
     validate_latlons_degrees(targets)
 
     boundingbox = BoundingBox(source, length)
-    print("boundingbox.bbox: ", boundingbox.bbox)
     targets_in_bbox = boundingbox.get_points_within_bboxs(targets, boundingbox.bbox)
     targets_within_distance = []
     for target in targets_in_bbox:
@@ -68,11 +68,11 @@ def closest_points_are_within_length(targets_distance, N, length):
     return targets_distance[:N][-1][1] <= length
 
 
-def get_closest_points(source_degrees, targets, N, length=None):
-    # print("get_closest_points")
-    # print("targets: ", targets)
-    validate_strictly_positive_integer(N)
-    validate_latlons_degrees(targets)
+def get_closest_points(source_degrees, targets, N, length=None, validate=False):
+    if validate:
+        # only validate if flagged, this will incur a significant time penalty. 
+        validate_strictly_positive_integer(N)
+        validate_latlons_degrees(targets)
 
     if N > len(targets):
         # should just return all targets with distance and sorted by distance
@@ -82,10 +82,9 @@ def get_closest_points(source_degrees, targets, N, length=None):
         length = make_bounding_box_length(source_degrees, targets, N)
 
     boundingbox = BoundingBox(source_degrees, length)
-    targets_filtered = boundingbox.filter_targets_in_bboxs(targets, boundingbox.bbox, )
-    print("targets_filtered: ", targets_filtered)
+    targets_filtered = boundingbox.filter_targets_in_bboxs(targets, boundingbox.bbox)
     targets_distance = boundingbox.compute_distances_from_source(source_degrees, targets_filtered)
-    
+
     # i = 0
     while (len(targets_distance) < N) or not closest_points_are_within_length(targets_distance, N, boundingbox.length):
         print('in while loop')
