@@ -76,11 +76,11 @@ Two common methods to compute distances on the sphere are the Haversine and Vinc
 
 The Haversine distance $d$ between two points $(\vphi_1,\lam_1)$ and $(\vphi_2,\lam_2)$ is 
  \be
- \sin^2\Blp \frac{d}{2R}\Brp= \sin^2\Blp \frac{\vphi_1-\vphi_2}{2} \Brp+ \cos \vphi_1\cos \vphi_2 \sin^2\Blp \frac{\lam_1-\lam_2}{2}\Brp
+ \sin^2\Blp \frac{d}{2R}\Brp= \sin^2\Blp \frac{\vphi_1-\vphi_2}{2} \Brp+ \cos \vphi_1\cos \vphi_2 \sin^2\Blp \frac{\lam_1-\lam_2}{2}\Brp\label{Haversine1}
  \ee
  or more conveniently
  \bea
-\cos \frac{d}{R} &=& \sin \vphi_1 \sin \vphi_2 + \cos (\lam_2 - \lam_1)   \cos \vphi_1 \cos \vphi_2\,.
+\cos \frac{d}{R} &=& \sin \vphi_1 \sin \vphi_2 + \cos (\lam_2 - \lam_1)   \cos \vphi_1 \cos \vphi_2\,. \label{Haversine2}
  \eea
 where $R$ is the radius of the sphere.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -185,6 +185,12 @@ When the north or south pole is within a distance $d$ from $S$, the naive boundi
   \caption{Construction of the two bounding boxes around $S$, where $S$ is near a pole on the sphere. The bounding boxes are marked by dashed lines and appear as hemispheres.  The equidistant surface is in red. The radial lines are at constant longitude, intersecting at the pole in the center of the figure.}
   \label{fig:bbox_reverse}
 \end{figure}
+
+To constuct $\cB_r$ we need to know the intersection of $C_{S,d}$ with the lines of longitude $\frac{\pi}{2}$ from $S$. In \eq{Haversine2} we set $\lam_2-\lam_1=\frac{\pi}{2}$ and get
+\be
+\sin \vphi_2 =\frac{ \cos \frac{d}{R} }{\sin \vphi_1  }
+\ee 
+which gives the southern(northern) extremity of a $\cB_r$ which intersects the north(south) pole.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{/Users/Halmagyi/Dropbox/utphys} 
