@@ -44,7 +44,7 @@ def get_closest_points(source_degrees, targets, N, length=None):
     targets_distance = boundingbox.compute_distances_from_source(source_degrees, targets_filtered)
 
     while (len(targets_distance) < N) or not closest_points_are_within_length(targets_distance, N, boundingbox.length):
-        print('in while loop')
+        print('Rescaling box, consider using a larger initial length')
     # rescale 
         if len(targets_distance) < N:
             boundingbox.length *= 1.25
