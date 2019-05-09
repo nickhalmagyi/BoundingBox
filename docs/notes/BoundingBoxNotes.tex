@@ -61,18 +61,18 @@ Geographic locations are typically given in the longitude-latitude coordinate sy
 \section{Constructing the Bounding Box}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We denote by $C_d$ the equidistant surface around $S$, it is the collection of points on the sphere which are exactly at a distance $d$ from $S$.  The bounding box around $C_d$ should have the following properties:
+We denote by $C_{S,d}$ the equidistant surface around $S$, it is the collection of points on the sphere which are exactly at a distance $d$ from $S$.  The bounding box around $C_{S,d}$ should have the following properties:
 \begin{enumerate}
 \item $\cB = \bigcup_i \cB_i$ should consist of regions $\cB_i$ where each $\cB_i$  is enclosed by lines of constant latitude and lines of constant longitude
-\item The equidistant surface $C_d$ should fit inside $\cB$.
+\item The equidistant surface $C_{S,d}$ should fit inside $\cB$.
 \end{enumerate}
-To construct the smallest bounding box $\cB$ which satisfies these points, we need to determine the minimum and maximum values of latitide and longitude attained by $C_d$. In practice we will utilize just two bounding regions $\cB_f$ and $\cB_r$ for the front and reverse sides of the sphere relative to $S$. It seems plausible that more compact $\cB$ could be constructed when $\cB$ consists of more than two regions.
+To construct the smallest bounding box $\cB$ which satisfies these points, we need to determine the minimum and maximum values of latitide and longitude attained by $C_{S,d}$. In practice we will utilize just two bounding regions $\cB_f$ and $\cB_r$ for the front and reverse sides of the sphere relative to $S$. It seems plausible that more compact $\cB$ could be constructed by considering $\cB$ with more than two regions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Haversine Formula}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
-Two common methods to compute distances on the sphere are the Haversine and Vincenty metrics. Both metrics use the geodetic coordintae system; the Haversine formula assumes the earth is exactly spherical while the Vincenty metric inclues the oblateness of the earth. In this work we will use the Haversine formula as an approximation to the true distance between points.
+Two common methods to compute distances on the sphere are the Haversine and Vincenty metrics. Both metrics use the geodetic coordinate system; the Haversine metric assumes the earth is exactly spherical while the Vincenty metric inclues the oblateness of the earth. In this work we will use the Haversine formula as an approximation to the true distance between points.
 
 The Haversine distance $d$ between two points $(\vphi_1,\lam_1)$ and $(\vphi_2,\lam_2)$ is 
  \be
@@ -85,7 +85,7 @@ The Haversine distance $d$ between two points $(\vphi_1,\lam_1)$ and $(\vphi_2,\
 where $R$ is the radius of the sphere.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Maximum Latitude}
-The maximum latitude on $C_d$ is attained when the longitude is the same as the longitude of $S$.  When two longitudes are equal 
+The maximum latitude on $C_{S,d}$ is attained when the longitude is the same as the longitude of $S$.  When two longitudes are equal 
  \be
  \lam_2=\lam_1
  \ee
@@ -105,7 +105,7 @@ To warm up to the computation of  the point of maximum longitude, we first look 
 \be
 a^2 x^2 + b^2 y^2 = 1 
 \ee
-and look for the maximum value of $x$.
+and look for the extremum values of $x$.
 
 We solve for $x$
 \bea
@@ -115,12 +115,15 @@ and compute the variation of $x$ w.r.t. $y$
 \bea
 x'(y) = \frac{1}{a}\frac{2b^2y}{(1- b^2 y^2 )}\,.
 \eea 
-The extremum of $x$ are of course at the point where $x'(y)=0$ and this is at $y=0$, in particular on the $x$-axis.
+The extremum of $x$ are of course at the point where $x'(y)=0$ and this is at $y=0$, in particular on the $x$-axis. This gives two extremum:
+\be
+x_{\it extr} = (\pm\frac{1}{a}, 0)
+\ee
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Back to the Sphere}
-Given a section of equal distance $d$ from the source $S=(\varphi_1, \lam_1)$ we want to know the maximum longitudinal distance, i.e. the maximum value of $|\lam_2-\lam_1|$. These will be the east and west boundaries of the bounding box.
+Given a section $C_{S,d}$ of equal distance $d$ from the source $S=(\varphi_1, \lam_1)$ we want to know the maximum longitudinal distance, i.e. the maximum value of $|\lam_2-\lam_1|$. These will be the east and west boundaries of the bounding box.
 
 We first fix $d$ and $(\varphi_1, \lam_1)$ then look for the extremum of $\lam_2$ as a function of $\vphi_2$. It is convenient to change coordinates to
 \be
@@ -147,7 +150,7 @@ which is where the bounding section touches the north(south) pole. At this point
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Equal  Latitude}
 
-One can also consider a related but inequivalent question, which is to contruct the shortest distance between two points of equal latitude. This is slightly non-trivial since the great circle between two points does not follow lines of equal latitude unless both points are on the equator. Indeed in this interesting \href{http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates}{blog post} the author realises the distinction between great circles and lines of constant latitude but mistakenly assumes that the maximum longitude is attained at the same latitude as the source $S$. 
+One can also consider a related but inequivalent question, which is to contruct the shortest distance between two points of equal latitude. This is slightly non-trivial since the great circle between two points does not follow lines of equal latitude unless both points are on the equator. Indeed in this interesting \href{http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates}{blog post} the author addresses the distinction between great circles and lines of constant latitude but mistakenly assumes that the maximum longitude is attained at a location with the same latitude as the source $S$. 
 
 To compute the distance between two points of equal latitude, we use the Haversine formula with
 \be
@@ -176,7 +179,7 @@ d &=&  2R \sin^{-1} \Big| \cos \vphi   \sin \Blp \frac{\lam_1-\lam_2}{2}\Brp \Bi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Pole Inside Bounding Box}
 
-When the north or south pole is within a distance $d$ from $S$, the naive bounding box with cross the pole and therefore occupy all values of longitude. We proceed by constructing two bounding boxes, $\cB_f$ (the {\it front}) for the longitude region of width $\pi$ centered on $S$ and another $\cB_r$ (the {\it reverse}) for the remainding $\pi$-sized region. When the pole is is the north (south) pole, then the south(north) limit of $\cB_f$ is determined by the point on $C_d$ directly souht(north) of $S$ while the south(north) limit of the $\cB_r$is determined by the intersection of $C_d$ with the constant longitude lines of $\cB_f$. This is demonstrated in figure \ref{fig:bbox_reverse}:
+When the north or south pole is within a distance $d$ from $S$, the naive bounding box will cross the pole and therefore occupy all values of longitude. We proceed by constructing two bounding boxes, $\cB_f$ (the {\it front}) for the longitude region of width $\pi$ centered on $S$ and another $\cB_r$ (the {\it reverse}) for the remainding $\pi$-sized region. When the pole is is the north(south) pole, then the south(north) limit of $\cB_f$ is determined by the point on $C_{S,d}$ directly south(north) of $S$ while the south(north) limit of the $\cB_r$is determined by the intersection of $C_{S,d}$ with the constant longitude lines of $\cB_f$. This is demonstrated in figure \ref{fig:bbox_reverse}:
 \begin{figure}[bth!]
   \includegraphics[width=\linewidth]{bbox_reverse}
   \caption{Construction of the two bounding boxes around $S$, where $S$ is near a pole on the sphere. The bounding boxes are marked by dashed lines and appear as hemispheres.  The equidistant surface is in red. The radial lines are at constant longitude, intersecting at the pole in the center of the figure.}
