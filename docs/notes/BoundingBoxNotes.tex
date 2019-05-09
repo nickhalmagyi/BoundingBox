@@ -61,13 +61,18 @@ Geographic locations are typically given in the longitude-latitude coordinate sy
 \section{Constructing the Bounding Box}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We denote by $C_d$ the equidistant surface around $S$, it is the collection of points on the sphere which are exactly at a distance $d$ from $S$.  To construct the bounding box $\cB$, we need to determine the minimum and maximum values of latitide and longitude attained by $C_d$.
+We denote by $C_d$ the equidistant surface around $S$, it is the collection of points on the sphere which are exactly at a distance $d$ from $S$.  The bounding box around $C_d$ should have the following properties:
+\begin{enumerate}
+\item $\cB = \bigcup_i \cB_i$ should consist of regions $\cB_i$ where each $\cB_i$  is enclosed by lines of constant latitude and lines of constant longitude
+\item The equidistant surface $C_d$ should fit inside $\cB$.
+\end{enumerate}
+To construct the smallest bounding box $\cB$ which satisfies these points, we need to determine the minimum and maximum values of latitide and longitude attained by $C_d$. In practice we will utilize just two bounding regions $\cB_f$ and $\cB_r$ for the front and reverse sides of the sphere relative to $S$. It seems plausible that more compact $\cB$ could be constructed when $\cB$ consists of more than two regions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Haversine Formula}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
-Two common methods to compute distances on the sphere are the Haversine and Vincenty metrics. Both metrics use the geodetic coordintae system, the Haversine formula assumes the earth is exactly spherical while the Vincenty metric inclues the oblateness of the earth. In this work we will use the Haversine formula as an approximation to the true distance between points.
+Two common methods to compute distances on the sphere are the Haversine and Vincenty metrics. Both metrics use the geodetic coordintae system; the Haversine formula assumes the earth is exactly spherical while the Vincenty metric inclues the oblateness of the earth. In this work we will use the Haversine formula as an approximation to the true distance between points.
 
 The Haversine distance $d$ between two points $(\vphi_1,\lam_1)$ and $(\vphi_2,\lam_2)$ is 
  \be
