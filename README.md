@@ -44,3 +44,10 @@ get_closest_points(paris, places_paris, N, length)
 [out] array([[(48.8283, 2.433), 6.698235303709655],
        [(48.8624, 2.2492), 7.562627816217736]], dtype=object)
 ```
+
+# tests
+
+tests are run using unittest:  
+```
+python3 -m unittest discover tests
+```
