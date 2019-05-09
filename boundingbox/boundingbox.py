@@ -82,24 +82,28 @@ class BoundingBox:
 
         max_latitude_diff = self.make_max_latitude_diff(length)
 
+        # the bounding box does not reach either pole
         if (np.abs(source_radians[0]) + max_latitude_diff) <= np.pi / 2:
             max_longitude_diff = self.make_max_longitude_diff(source_radians, length)
             bbox_front[NORTH] = source_radians[0] + max_latitude_diff
             bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
             bbox_front[EAST] = mod_longitude_radians(source_radians[1] + max_longitude_diff)
             bbox_front[WEST] = mod_longitude_radians(source_radians[1] - max_longitude_diff)
-            
+
+        # the bounding box surpasses at least one pole
         else:
             bbox_front[EAST] = np.pi / 2
             bbox_front[WEST] = -np.pi / 2
             bbox_reverse[EAST] = -np.pi / 2
             bbox_reverse[WEST] = np.pi / 2
 
+            # the bounding box surpasses both north and south pole
             if (source_radians[0] + max_latitude_diff > np.pi / 2 and \
                 source_radians[0] - max_latitude_diff < -np.pi / 2):
                 bbox_front[NORTH] = np.pi / 2
                 bbox_front[SOUTH] = -np.pi / 2
-        
+
+            # the bounding box surpasses the north pole
             elif source_radians[0] + max_latitude_diff > np.pi / 2:
                 bbox_front[NORTH] = np.pi / 2
                 bbox_front[SOUTH] = source_radians[0] - max_latitude_diff
@@ -107,7 +111,7 @@ class BoundingBox:
                 # bbox_reverse[SOUTH] is the point at which the circle intersects lon =  90 and -90 degrees.
                 bbox_reverse[SOUTH] = np.arcsin(np.cos(length / self.earth_radius) / np.sin(source_radians[0]))
 
-
+            # the bounding box surpasses the south pole
             elif source_radians[0] - max_latitude_diff < -np.pi / 2:
                 bbox_front[NORTH] = source_radians[0] + max_latitude_diff
                 bbox_front[SOUTH] = -np.pi / 2
