@@ -5,7 +5,7 @@ import time
 from importlib import reload
 
 import boundingbox.validations; reload(boundingbox.validations)
-from boundingbox.validations.numbers import validate_strictly_positive_integer
+from boundingbox.validations.numbers import validate_strictly_positive_integer, validate_positive_number
 
 
 def get_points_within_distance(source, targets, length):
@@ -17,6 +17,7 @@ def get_points_within_distance(source, targets, length):
     :param length: positive number
     :return: list of targets whose distance to source is less than length.
     """
+    validate_positive_number(length)
     boundingbox = BoundingBox(source, length)
     targets_in_bbox = boundingbox.get_points_within_bboxs(targets, boundingbox.bbox)
     targets_within_distance = targets_in_bbox[np.transpose(targets_in_bbox)[1] <= length]
