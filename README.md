@@ -1,12 +1,15 @@
 # Bounding Box
 
-The main purpose of this repo is to efficiently perform certain geographic computations.
-Specfically, taking a list of lat-lon pairs (targets) and a single lat-lon pair (source), using this code one can compute
-the N-closest locations from targets to the source. One can also compute all locations in targets within a given distance.
+The main purpose of this repo is to efficiently perform certain computations on locations in geodetic coordinates (latitude-longitude).
+Specfically, taking a list of lat-lon pairs (targets) and a single lat-lon pair (source), the following two computations are exposed
+
+1. get_closest_points: returns the closest N-targets around the source
+2. get_points_within_distance: returns all targets within a cetain distance of the source.
 
 
 This is performed efficiently by creating a bounding box and only computing distances from the source to the
-locations within the box.  
+locations within the box. The initial set of targets is filtered down to those within the bounding box using
+numpy broadcasting, so effectively is performed directly in C and is quite fast.
 
 
 Example:  
